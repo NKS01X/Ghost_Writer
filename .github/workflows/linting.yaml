@@ -1,12 +1,12 @@
 name: Linter Checker
 
-on: 
-  push: 
+on:
+  push:
     branches: [ "src" ]
-  pull_request: 
+  pull_request:
     branches: [ "src" ]
 
-jobs: 
+jobs:
   checkstyle-lint:
     runs-on: ubuntu-latest
 
@@ -17,7 +17,7 @@ jobs:
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
-          java-version: '17' 
+          java-version: '17'
           distribution: 'temurin'
 
       - name: Download Checkstyle
