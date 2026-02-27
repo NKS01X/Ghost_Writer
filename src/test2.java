@@ -1,6 +1,6 @@
 import java.util.*; // Unused import (Checkstyle hates this)
 
-public class testing 
+public class test2 
 { // Curly brace is on the wrong line
     public static void main(String[] args) {
         System.out.println("Let's break the pipeline!");
