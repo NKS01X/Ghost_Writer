@@ -1,0 +1,27 @@
+name: Linter Checker
+
+on: 
+  push: 
+    branch: [ "src" ]
+  pull_request: 
+    branch: [ "src" ]
+
+jobs: 
+  checkstyle-lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17' 
+          distribution: 'temurin'
+
+      - name: Download Checkstyle
+        run: wget https://github.com/checkstyle/checkstyle/releases/download/checkstyle-10.14.2/checkstyle-10.14.2-all.jar
+
+      - name: Run Java Linter
+        run: java -jar checkstyle-10.14.2-all.jar -c /google_checks.xml .
