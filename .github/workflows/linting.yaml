@@ -2,9 +2,9 @@ name: Linter Checker
 
 on: 
   push: 
-    branch: [ "src" ]
+    branchs: [ "src" ]
   pull_request: 
-    branch: [ "src" ]
+    branchs: [ "src" ]
 
 jobs: 
   checkstyle-lint:
