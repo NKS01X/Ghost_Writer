@@ -1,4 +1,4 @@
-import java.util.Scanner; // Unused import (Checkstyle hates this)
+import java.util.*; // Unused import (Checkstyle hates this)
 
 public class test 
 { // Curly brace is on the wrong line
