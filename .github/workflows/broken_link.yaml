@@ -1,0 +1,61 @@
+name: Broken Link Checker
+
+on:
+  push:
+    branches: [ "**" ]
+  pull_request:
+
+jobs:
+  markdown-scan:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check for broken links in markdown files
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          echo "Collecting markdown files..."
+          mapfile -t files < <(git ls-files "*.md")
+
+          if [ ${#files[@]} -eq 0 ]; then
+            echo "No markdown files found. Exiting."
+            exit 0
+          fi
+
+          failed=0
+
+          for file in "${files[@]}"
+          do
+            echo ""
+            echo "Scanning: $file"
+
+            while IFS= read -r url
+            do
+              if [[ "$url" =~ ^https?:// ]]; then
+                echo "Checking: $url"
+
+                status=$(curl --max-time 10 -o /dev/null -s -w "%{http_code}" "$url" || echo "000")
+
+                if [[ "$status" -ge 400 || "$status" == "000" ]]; then
+                  echo "❌ Broken link found: $url (Status: $status)"
+                  failed=1
+                else
+                  echo "✅ OK ($status)"
+                fi
+              fi
+            done < <(grep -oP '(?<=\().*?(?=\))' "$file" || true)
+
+          done
+
+          if [ "$failed" -ne 0 ]; then
+            echo ""
+            echo "❌ Broken links detected. Failing workflow."
+            exit 1
+          fi
+
+          echo ""
+          echo "✅ All links are valid."
