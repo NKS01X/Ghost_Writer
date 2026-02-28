@@ -2,7 +2,7 @@ name: Broken Link Checker
 
 on:
   push:
-    branches: [ "**" ]
+    branches: [ "src" ]
   pull_request:
 
 jobs:
@@ -58,4 +58,5 @@ jobs:
           fi
 
           echo ""
+
           echo "✅ All links are valid."
