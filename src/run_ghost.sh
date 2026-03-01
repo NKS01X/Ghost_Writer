@@ -12,12 +12,13 @@ git config --global user.email "github-actions[bot]@users.noreply.github.com"
 BRANCH_NAME="ghost/tests-$(date +%s)"
 git checkout -b "$BRANCH_NAME"
 
-for file in "$CHANGED_FILES"; do
-  python3 ghost_writer.py "$file"
+for file in $CHANGED_FILES; do
+  # Points to the new location in src/
+  python3 src/ghost_writer.py "$file"
 done
 
 git add .
-git commit -m "chore: automated tests via GitHub Models (Grok)"
+git commit -m "chore: automated tests via Grok 3"
 git push origin "$BRANCH_NAME"
 
-GH_TOKEN=$GITHUB_TOKEN gh pr create --title "Ghost Writer: Grok-Generated Tests" --body "Tests created for: $CHANGED_FILES"
+gh pr create --title "Ghost Writer: Unit Tests" --body "Tests generated for: $CHANGED_FILES"
