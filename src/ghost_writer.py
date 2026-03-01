@@ -15,9 +15,9 @@ def generate_test(file_path):
     )
     
     response = client.chat.completions.create(
-        model="Grok-3", # or "Grok-4.1-fast-reasoning"
+        model="Grok-3",
         messages=[
-            {"role": "system", "content": "You are Grok. Write unit tests for the following code. Return ONLY the code. No markdown blocks."},
+            {"role": "system", "content": "You are Grok 3. Write unit tests for the following code. Return ONLY the raw code. No markdown formatting or explanations."},
             {"role": "user", "content": code}
         ]
     )
