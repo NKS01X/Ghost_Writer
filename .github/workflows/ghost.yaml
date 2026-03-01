@@ -24,4 +24,4 @@ jobs:
         env:
           GH_MODELS_TOKEN: ${{ secrets.GH_MODELS_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: bash run_ghost.sh
+        run: bash src/run_ghost.sh
