@@ -1,6 +1,6 @@
 #!/bin/bash
 
-CHANGED_FILES=$(git diff --name-only origin/main | grep '\.js$' | grep -v '\.test\.js$')
+CHANGED_FILES=$(git diff --name-only origin/master | grep '\.js$' | grep -v '\.test\.js$')
 
 if [ -z "$CHANGED_FILES" ]; then
   exit 0
