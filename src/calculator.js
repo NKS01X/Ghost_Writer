@@ -1,2 +1,3 @@
-const add = (a, b) => a + b;
-export { add };
+export const multiply = (a, b) => a * b;
+
+export const isEven = (num) => num % 2 === 0;
