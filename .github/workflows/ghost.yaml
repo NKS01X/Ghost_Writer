@@ -3,7 +3,7 @@ on:
   push:
     branches:
       - 'feature/*'
-      - '!feature/ghost-tests-*'
+      - '!ghost/tests-*'
 
 
 jobs:

@@ -1,0 +1,46 @@
+name: PR Test Validator
+on:
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build Docker image
+        run: docker build -t pr-tests .
+
+      - name: Run tests in Docker
+        id: tests
+        run: |
+          docker run --rm pr-tests 2>&1 | tee test_output.txt
+        continue-on-error: true
+
+      - name: Comment and merge on success
+        if: steps.tests.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr comment ${{ github.event.pull_request.number }} --body "All tests passed. Auto-merging."
+          gh pr merge ${{ github.event.pull_request.number }} --merge
+
+      - name: Comment and close on failure
+        if: steps.tests.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ERRORS=$(cat test_output.txt)
+          gh pr comment ${{ github.event.pull_request.number }} --body "Tests failed. Closing PR.
+
+          **Test Output:**
+          \`\`\`
+          $ERRORS
+          \`\`\`"
+          gh pr close ${{ github.event.pull_request.number }}
