@@ -3,6 +3,8 @@ on:
   push:
     branches:
       - 'feature/*'
+      - '!feature/ghost-tests-*'
+
 
 jobs:
   generate-tests:
