@@ -15,7 +15,7 @@ def generate_test(file_path):
     )
     
     response = client.chat.completions.create(
-        model="xai/grok-3",
+        model="grok-3",
         messages=[
             {"role": "system", "content": "You are Grok 3. Write unit tests for the following code. Return ONLY the raw code. No markdown formatting or explanations."},
             {"role": "user", "content": code}
