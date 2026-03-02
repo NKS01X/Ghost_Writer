@@ -11,8 +11,8 @@ fi
 git config --global user.name "github-actions[bot]"
 git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
-ORIGINAL_BRANCH=$(git rev-parse --abbrev-ref HEAD)
-GHOST_BRANCH="ghost-tests-$(date +%s)"
+# ORIGINAL_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+GHOST_BRANCH="ghost/tests-$(date +%s)"
 git checkout -b "$GHOST_BRANCH"
 
 for file in $CHANGED_FILES; do
@@ -20,7 +20,9 @@ for file in $CHANGED_FILES; do
 done
 
 git add .
-git commit -m "chore: automated tests via Grok 3 [skip ci]"
+git commit -m "chore: automated tests via Grok 3"
 git push origin "$GHOST_BRANCH"
 
-gh pr create --title "Ghost Writer: Unit Tests" --body "Tests generated for: $CHANGED_FILES" --base "$ORIGINAL_BRANCH" --head "$GHOST_BRANCH"
+#direct pr 
+gh pr create --title "Ghost Writer: Unit Tests" --body "Tests generated for: $CHANGED_FILES"
+# gh pr create --title "Ghost Writer: Unit Tests" --body "Tests generated for: $CHANGED_FILES" --base "$ORIGINAL_BRANCH" --head "$GHOST_BRANCH"
