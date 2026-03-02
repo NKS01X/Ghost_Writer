@@ -15,7 +15,7 @@ def generate_test(file_path):
     )
     
     response = client.chat.completions.create(
-        model="Grok-3",
+        model="grok-3",
         messages=[
             {"role": "system", "content": "You are Grok 3. Write unit tests for the following code. Return ONLY the raw code. No markdown formatting or explanations."},
             {"role": "user", "content": code}
@@ -23,8 +23,14 @@ def generate_test(file_path):
     )
     
     test_code = response.choices[0].message.content
-    test_file_path = f"{os.path.splitext(file_path)[0]}.test.js"
-    
+
+    test_dir = "tests"
+    os.makedirs(test_dir, exist_ok=True)
+
+    basename = os.path.basename(file_path)
+    name, ext = os.path.splitext(basename)
+    test_file_path = os.path.join(test_dir, f"{name}.test{ext}")
+
     with open(test_file_path, 'w') as f:
         f.write(test_code)
 
