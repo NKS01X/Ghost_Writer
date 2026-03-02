@@ -1,9 +1,4 @@
 import unittest
-import sys
-import os
-
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
-from testt import add
 
 class TestAddFunction(unittest.TestCase):
     def test_add_positive_numbers(self):
