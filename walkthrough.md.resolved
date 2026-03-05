@@ -1,0 +1,59 @@
+# CareerNest Testing Suite — Walkthrough
+
+## What Was Built
+
+### 1. Mock Data Seed Script
+- [seed-test-data.ts](file:///c:/webdevprojects/internship_placement/prisma/seed-test-data.ts) — Creates 3 Students (with resumes + 128-dim mock embeddings) and 1 Recruiter. Outputs a JWT token for manual testing.
+
+### 2. Matches Endpoint
+- [matches.controller.ts](file:///c:/webdevprojects/internship_placement/src/controllers/matches.controller.ts) — `GET /jobs/:id/matches` returns top 5 candidates by cosine similarity (`1 - (<=>)`).
+- [index.ts](file:///c:/webdevprojects/internship_placement/src/index.ts) — Added `cookie-parser` middleware + matches route.
+
+### 3. Comprehensive Test Suite (48 tests)
+
+| File | Tests | Coverage |
+|------|-------|----------|
+| [utils.test.ts](file:///c:/webdevprojects/internship_placement/tests/unit/utils.test.ts) | 5 | [encrypt()](file:///c:/webdevprojects/internship_placement/src/utils/utils.ts#5-8), [verifyPass()](file:///c:/webdevprojects/internship_placement/src/utils/utils.ts#9-15) |
+| [embedding.service.test.ts](file:///c:/webdevprojects/internship_placement/tests/unit/embedding.service.test.ts) | 6 | Grok API mocking, newline stripping, errors |
+| [job.service.test.ts](file:///c:/webdevprojects/internship_placement/tests/unit/job.service.test.ts) | 4 | Full pipeline: embed → create → SQL → BullMQ |
+| [whatsapp.service.test.ts](file:///c:/webdevprojects/internship_placement/tests/unit/whatsapp.service.test.ts) | 5 | Mock sender shape, messageId format |
+| [middleware.test.ts](file:///c:/webdevprojects/internship_placement/tests/unit/middleware.test.ts) | 9 | [isLoggedIn](file:///c:/webdevprojects/internship_placement/src/middleware/auth.ts#8-47), [isRecruiter](file:///c:/webdevprojects/internship_placement/src/middleware/role.ts#3-13), [isStudent](file:///c:/webdevprojects/internship_placement/src/middleware/role.ts#14-24) |
+| [auth.test.ts](file:///c:/webdevprojects/internship_placement/tests/integration/auth.test.ts) | 9 | Register, Login (cookie), Logout |
+| [jobs.test.ts](file:///c:/webdevprojects/internship_placement/tests/integration/jobs.test.ts) | 10 | CRUD, role guards, BullMQ enqueue, matches |
+
+### Test Helpers
+- [prisma-mock.ts](file:///c:/webdevprojects/internship_placement/tests/helpers/prisma-mock.ts) — Deep PrismaClient mock
+- [factories.ts](file:///c:/webdevprojects/internship_placement/tests/helpers/factories.ts) — [makeUser()](file:///c:/webdevprojects/internship_placement/tests/helpers/factories.ts#12-24), [makeResume()](file:///c:/webdevprojects/internship_placement/tests/helpers/factories.ts#25-38), [makeJob()](file:///c:/webdevprojects/internship_placement/tests/helpers/factories.ts#39-53)
+- [app.ts](file:///c:/webdevprojects/internship_placement/tests/helpers/app.ts) — Express app factory for supertest
+
+---
+
+## How to Run
+
+```bash
+# Run all tests once
+npm test
+
+# Watch mode (re-runs on save)
+npm run test:watch
+
+# With coverage report
+npm run test:coverage
+
+# Run seed script (populates DB for manual testing)
+npm run seed
+```
+
+### Expected Output
+```
+ ✓ tests/unit/utils.test.ts (5 tests)
+ ✓ tests/unit/embedding.service.test.ts (6 tests)
+ ✓ tests/unit/job.service.test.ts (4 tests)
+ ✓ tests/unit/whatsapp.service.test.ts (5 tests)
+ ✓ tests/unit/middleware.test.ts (9 tests)
+ ✓ tests/integration/auth.test.ts (9 tests)
+ ✓ tests/integration/jobs.test.ts (10 tests)
+
+ Test Files  7 passed
+ Tests       48 passed
+```

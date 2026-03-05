@@ -1,0 +1,137 @@
+# Job Matching Platform — Testing Suite
+
+Build a mock data seeder, a matches endpoint, and a Postman collection so the entire job-matching pipeline can be tested end-to-end without a frontend.
+
+## User Review Required
+
+> [!IMPORTANT]
+> The seed script will **create real rows** in your Neon Postgres database. It uses `prisma.user.deleteMany()` at the top to clear prior seed data, so **do NOT run it against a production database**.
+
+> [!WARNING]
+> Auth is cookie-based (`req.cookies.token` via JWT). For Postman to work, you need the `cookie-parser` middleware or manually set a `Cookie` header. **Currently `cookie-parser` is not installed.** The plan adds it.
+
+---
+
+## Proposed Changes
+
+### Seed Script
+
+#### [NEW] [seed-test-data.ts](file:///c:/webdevprojects/internship_placement/prisma/seed-test-data.ts)
+
+Creates test data using Prisma + raw SQL for vector insertion:
+
+1. **Helper** — `generateMockEmbedding(seed: number): number[]`
+   Generates a deterministic 128-float array that mimics Grok v1 output (values in [-1, 1] with realistic distribution via `Math.sin / Math.cos` seeded variation).
+
+2. **Seed users** — 3 Students + 1 Recruiter
+   | Name | Email | Role | Location |
+   |------|-------|------|----------|
+   | Alice Engineer | alice@test.com | Student | Mumbai |
+   | Bob Developer | bob@test.com | Student | Bangalore |
+   | Carol Designer | carol@test.com | Student | Mumbai |
+   | Dave Recruiter | dave@test.com | Recruiter | — |
+
+3. **Resumes** — Created via Prisma `user.create` with nested `resume.create`:
+   - Skills, projects, workExp populated with realistic mock data
+   - `location` and `yearsOfExperience` set per student
+
+4. **Vector insertion** — For each student:
+   ```sql
+   UPDATE "Resume" SET embedding = '[0.12, -0.45, ...]'::vector WHERE "userId" = '<uuid>'
+   ```
+
+5. **Outputs** created user IDs and a ready-to-use recruiter JWT token to stdout.
+
+#### [MODIFY] [package.json](file:///c:/webdevprojects/internship_placement/package.json)
+
+- Add `"seed": "tsx prisma/seed-test-data.ts"` script
+- Add `cookie-parser` dependency (needed for Postman cookie auth)
+
+---
+
+### Matches Endpoint
+
+#### [NEW] [matches.controller.ts](file:///c:/webdevprojects/internship_placement/src/controllers/matches.controller.ts)
+
+`GET /jobs/:id/matches` — manually trigger cosine similarity search:
+
+```sql
+SELECT
+  r.id AS "resumeId",
+  r."userId",
+  u.name,
+  u.email,
+  1 - (r.embedding <=> $1::vector) AS similarity
+FROM "Resume" r
+JOIN "User" u ON u.id = r."userId"
+WHERE u.role = 'Student'
+  AND r.embedding IS NOT NULL
+ORDER BY similarity DESC
+LIMIT 5
+```
+
+- Fetches job embedding via raw SQL (Unsupported type)
+- Returns top 5 matches with `similarity` score (0–1)
+- Handles: job not found (404), no embedding (400)
+
+#### [MODIFY] [index.ts](file:///c:/webdevprojects/internship_placement/src/index.ts)
+
+- Import `cookie-parser` and apply `app.use(cookieParser())`
+- Add route: `app.get("/jobs/:id/matches", isLoggedIn, getJobMatches)`
+
+---
+
+### Postman Collection
+
+#### [NEW] [CareerNest_Testing.postman_collection.json](file:///c:/webdevprojects/internship_placement/postman/CareerNest_Testing.postman_collection.json)
+
+Pre-built Postman v2.1 collection with:
+
+| # | Request | Method | URL | Notes |
+|---|---------|--------|-----|-------|
+| 1 | Seed — Register Recruiter | POST | `/register` | Creates Dave Recruiter |
+| 2 | Seed — Login Recruiter | POST | `/login` | Captures JWT cookie |
+| 3 | Create Job | POST | `/jobs` | Sample body with title, description, etc. |
+| 4 | Get All Jobs | GET | `/jobs` | Lists seeded + created jobs |
+| 5 | Get Job Matches | GET | `/jobs/:id/matches` | Replace `:id` with job ID |
+
+Each request uses `{{baseUrl}}` variable (default: `http://localhost:3000`).
+Post-response scripts auto-extract job IDs into Postman variables.
+
+---
+
+## Verification Plan
+
+### Automated Tests
+
+1. **Run seed script** — Confirms Prisma operations and raw SQL vector insertion:
+   ```bash
+   npx tsx prisma/seed-test-data.ts
+   ```
+   Expected: Outputs 4 user IDs, 3 resume IDs, and a JWT token. No errors.
+
+2. **Start server + test endpoints** — After seeding:
+   ```bash
+   npm run dev
+   ```
+   Then in a separate terminal, use curl or Postman:
+   ```bash
+   # Login as recruiter to get JWT cookie
+   curl -X POST http://localhost:3000/login -H "Content-Type: application/json" \
+     -d '{"email":"dave@test.com","pass":"password123"}' -c cookies.txt
+
+   # Create a job
+   curl -X POST http://localhost:3000/jobs -H "Content-Type: application/json" \
+     -b cookies.txt \
+     -d '{"title":"Backend Engineer","company":"TechCorp","description":"Build scalable APIs with Node.js, TypeScript, and PostgreSQL","location":"Mumbai","salary":"12-18 LPA","requiredExperience":1}'
+
+   # Get matches (replace JOB_ID)
+   curl http://localhost:3000/jobs/JOB_ID/matches -b cookies.txt
+   ```
+
+### Manual Verification
+
+1. Run the seed script and confirm no Prisma/SQL errors
+2. Import the Postman collection, run the requests in order
+3. Verify the matches endpoint returns 5 candidates sorted by similarity
+4. Check Upstash Redis dashboard → verify a `match-job` entry appeared in `job-matching-queue`
