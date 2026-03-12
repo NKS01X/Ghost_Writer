@@ -1,4 +1,4 @@
-# 👻 Ghost Writer CI
+# 👻 Ghost Writer CI Pipeline
 
 **Ghost Writer** is an end-to-end automated testing pipeline powered by **Grok 3** (via GitHub Models). It monitors your active feature branches, automatically writes your test suites for you, and securely auto-merges your code to `master` after validating it in an isolated Docker environment.
 
